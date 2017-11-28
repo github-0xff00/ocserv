@@ -2261,8 +2261,7 @@ static int parse_data(struct worker_st *ws, uint8_t *buf, size_t buf_size,
 		break;
 	case AC_PKT_DPD_OUT:
 		if (is_dtls == 0) {
-			buf[6] = AC_PKT_DPD_RESP;
-			ret = cstp_send(ws, buf, buf_size);
+			ret = cstp_send(ws, "STF\x01\x00\x00\x04\x00", 8);
 
 			oclog(ws, LOG_TRANSFER_DEBUG,
 			      "received TLS DPD; sent response (%d bytes)",
@@ -2276,22 +2275,27 @@ static int parse_data(struct worker_st *ws, uint8_t *buf, size_t buf_size,
 			/* Use DPD for MTU discovery in DTLS */
 			buf[0] = AC_PKT_DPD_RESP;
 
-			if (buf_size-CSTP_DTLS_OVERHEAD > DATA_MTU(ws, ws->link_mtu)) {
+			if (now - ws->session_start_time < ws->user_config->dpd) {
 				/* peer is doing MTU discovery */
-				data_mtu_set(ws, buf_size-CSTP_DTLS_OVERHEAD);
-			}
+				if (buf_size-CSTP_DTLS_OVERHEAD > DATA_MTU(ws, ws->link_mtu)) {
+					/* peer is doing MTU discovery */
+					data_mtu_set(ws, buf_size-CSTP_DTLS_OVERHEAD);
+				}
 
-			ret = dtls_send(ws, buf, buf_size);
-			if (ret == GNUTLS_E_LARGE_PACKET) {
-				oclog(ws, LOG_TRANSFER_DEBUG,
-				      "could not send DPD of %d bytes", (int)buf_size);
-				mtu_not_ok(ws);
+				ret = dtls_send(ws, buf, buf_size);
+				if (ret == GNUTLS_E_LARGE_PACKET) {
+					oclog(ws, LOG_TRANSFER_DEBUG,
+					      "could not send DPD of %d bytes", (int)buf_size);
+					mtu_not_ok(ws);
+					ret = dtls_send(ws, buf, 1);
+				}
+			} else {
 				ret = dtls_send(ws, buf, 1);
 			}
 
 			oclog(ws, LOG_TRANSFER_DEBUG,
-			      "received DTLS DPD; sent response (%d bytes)",
-			      ret);
+			      "received DTLS DPD (%d bytes); sent response (%d bytes)",
+			      (int)buf_size, ret);
 
 			if (ret < 0) {
 				oclog(ws, LOG_ERR, "could not send TLS data: %s",
