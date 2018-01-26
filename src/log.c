@@ -37,22 +37,28 @@ void __attribute__ ((format(printf, 3, 4)))
 	char buf[512];
 	const char* ip;
 	va_list args;
+	int debug_prio;
 
-	if (priority == LOG_DEBUG && ws->perm_config->debug < DEBUG_INFO)
+	if (ws->vhost)
+		debug_prio = WSPCONFIG(ws)->debug;
+	else
+		debug_prio = GETPCONFIG(ws)->debug;
+
+	if (priority == LOG_DEBUG && debug_prio < DEBUG_INFO)
 		return;
 
 	if (priority == LOG_HTTP_DEBUG) {
-	    if (ws->perm_config->debug < DEBUG_HTTP)
+	    if (debug_prio < DEBUG_HTTP)
                 return;
             else
                 priority = LOG_INFO;
         } else if (priority == LOG_TRANSFER_DEBUG) {
-	    if (ws->perm_config->debug < DEBUG_TRANSFERRED)
+	    if (debug_prio < DEBUG_TRANSFERRED)
                 return;
             else
                 priority = LOG_DEBUG;
         } else if (priority == LOG_SENSITIVE) {
-	    if (ws->perm_config->debug < DEBUG_SENSITIVE)
+	    if (debug_prio < DEBUG_SENSITIVE)
                 return;
             else
                 priority = LOG_DEBUG;
@@ -85,17 +91,23 @@ void __attribute__ ((format(printf, 4, 5)))
 	char ipbuf[128];
 	const char* ip = NULL;
 	va_list args;
+	int debug_prio;
 
-	if (priority == LOG_DEBUG && s->perm_config->debug < 3)
+	if (s)
+		debug_prio = GETPCONFIG(s)->debug;
+	else
+		debug_prio = 1;
+
+	if (priority == LOG_DEBUG && debug_prio < 3)
 		return;
 
 	if (priority == LOG_HTTP_DEBUG) {
-	    if (s->perm_config->debug < DEBUG_HTTP)
+	    if (debug_prio < DEBUG_HTTP)
                 return;
             else
                 priority = LOG_DEBUG;
         } else if (priority == LOG_TRANSFER_DEBUG) {
-	    if (s->perm_config->debug < DEBUG_TRANSFERRED)
+	    if (debug_prio < DEBUG_TRANSFERRED)
                 return;
             else
                 priority = LOG_DEBUG;
@@ -129,8 +141,14 @@ void  mslog_hex(const main_server_st * s, const struct proc_st* proc,
 	int ret;
 	size_t buf_size;
 	gnutls_datum_t data = {bin, bin_size};
+	int debug_prio;
 
-	if (priority == LOG_DEBUG && s->perm_config->debug == 0)
+	if (s)
+		debug_prio = GETPCONFIG(s)->debug;
+	else
+		debug_prio = 1;
+
+	if (priority == LOG_DEBUG && debug_prio == 0)
 		return;
 
 	if (b64) {
@@ -154,8 +172,14 @@ void  oclog_hex(const worker_st* ws, int priority,
 	int ret;
 	size_t buf_size;
 	gnutls_datum_t data = {bin, bin_size};
+	int debug_prio;
 
-	if (priority == LOG_DEBUG && ws->perm_config->debug == 0)
+	if (ws->vhost)
+		debug_prio = WSPCONFIG(ws)->debug;
+	else
+		debug_prio = GETPCONFIG(ws)->debug;
+
+	if (priority == LOG_DEBUG && debug_prio == 0)
 		return;
 
 	if (b64) {
@@ -180,7 +204,7 @@ void  seclog_hex(const struct sec_mod_st* sec, int priority,
 	size_t buf_size;
 	gnutls_datum_t data = {bin, bin_size};
 
-	if (priority == LOG_DEBUG && sec->perm_config->debug == 0)
+	if (priority == LOG_DEBUG && GETPCONFIG(sec)->debug == 0)
 		return;
 
 	if (b64) {

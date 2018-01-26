@@ -211,6 +211,7 @@ message sec_auth_init_msg
 	required uint32 auth_type = 9 [default = 0];
 	optional string our_ip = 10;
 	optional string user_agent = 11;
+	optional string vhost = 12;
 }
 
 /* SEC_AUTH_CONT */
@@ -297,6 +298,7 @@ message secm_session_reply_msg
 	required uint32 ipv4_seed = 8;
 	required bytes sid = 9;
 	required bool tls_auth_ok = 10;
+	optional string vhost = 11;
 }
 
 /* internal struct */

@@ -126,10 +126,14 @@ const char *cmd_request_to_str(unsigned _cmd)
 		return "sm: decrypt";
 	case CMD_SEC_SIGN:
 		return "sm: sign";
+	case CMD_SECM_STATS:
+		return "sm: stats";
 	case CMD_SECM_SESSION_CLOSE:
 		return "sm: session close";
 	case CMD_SECM_SESSION_OPEN:
 		return "sm: session open";
+	case CMD_SECM_SESSION_REPLY:
+		return "sm: session reply";
 	case CMD_SECM_BAN_IP:
 		return "sm: ban IP";
 	case CMD_SECM_BAN_IP_REPLY:

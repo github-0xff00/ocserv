@@ -33,7 +33,7 @@
 #include <gnutls/crypto.h>
 #include <ccan/hash/hash.h>
 
-#include <vpn.h>
+#include <main.h>
 #include <sec-mod-resume.h>
 #include <common.h>
 #include <ip-util.h>
@@ -127,7 +127,7 @@ int handle_resume_store_req(sec_mod_st *sec,
 	if (req->session_data.len > MAX_SESSION_DATA_SIZE)
 		return -1;
 
-	max = MAX(2 * sec->config->max_clients, DEFAULT_MAX_CACHED_TLS_SESSIONS);
+	max = MAX(2 * GETCONFIG(sec)->max_clients, DEFAULT_MAX_CACHED_TLS_SESSIONS);
 	if (sec->tls_db.entries >= max) {
 		seclog(sec, LOG_INFO,
 		      "maximum number of stored TLS sessions reached (%u)",
@@ -183,7 +183,7 @@ void expire_tls_sessions(sec_mod_st *sec)
 
 		exp = gnutls_db_check_entry_time(&d);
 
-		if (now - exp > TLS_SESSION_EXPIRATION_TIME(sec->config)) {
+		if (now - exp > TLS_SESSION_EXPIRATION_TIME(GETCONFIG(sec))) {
 			cache->session_id_size = 0;
 
 			htable_delval(sec->tls_db.ht, &iter);
